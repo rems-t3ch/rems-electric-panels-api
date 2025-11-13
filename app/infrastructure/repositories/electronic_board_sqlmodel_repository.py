@@ -63,5 +63,6 @@ class ElectronicBoardSQLModelRepository(ElectronicBoardRepository):
             async with session.begin():
                 board = await session.get(ElectronicBoard, board_id)
                 if board is not None:
-                    session.delete(board)
-            return True
+                    await session.delete(board)
+                    return True
+            return False
