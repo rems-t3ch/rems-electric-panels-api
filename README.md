@@ -15,7 +15,7 @@ Rems Electric Panels API is a RESTful service for managing electronic panels (el
 - Layered Architecture
 
 ## Layers
-This version of Rems Electric Panels API follows a layered architecture pattern organized into four main layers: Models, Repositories, Infrastructure, and Interfaces.
+ This version of Rems Electric Panels API follows a layered architecture pattern organized into five main layers: Models, Repositories, Application, Infrastructure, and Interfaces.
 
 ### Models Layer
 
@@ -43,16 +43,37 @@ The Repositories Layer provides an abstraction for data access operations. It in
 #### Repository Implementation
 - **ElectronicBoardSQLModelRepository**: Concrete implementation using SQLModel and async SQLAlchemy.
 - Uses per-call sessions with proper transaction management.
-- Implements create, read, update, and delete operations.
+- Implements create, read, update, delete, and exists operations.
+
+### Services Layer
+
+The Services Layer defines business operation contracts and orchestrates application logic. It includes the following components:
+
+#### Service Interface (Domain)
+- **ElectronicBoardService**: Abstract service interface defining business operations.
+- Located in `app/domain/services/` to maintain separation of concerns.
+- Async method signatures for create, read, update, delete, and query operations.
+
+### Application Layer
+
+The Application Layer implements business logic and orchestrates data flow between layers. Its features include:
+
+#### Service Implementation
+- **ElectronicBoardServiceImpl**: Concrete implementation of the service interface.
+- Located in `app/application/internal/services/`.
+- Applies business rules and validation logic.
+- Coordinates repository operations and manages transaction boundaries.
+- Maps business exceptions (e.g., not found scenarios) to domain-level errors.
 
 ### Infrastructure Layer
 
-The Infrastructure Layer is responsible for managing database connections and configuration. Its features include:
+The Infrastructure Layer is responsible for managing database connections, configuration, and dependency wiring. Its features include:
 
 - Database engine setup using async SQLAlchemy with SQLite.
 - Async session factory configuration.
 - Database initialization helper (`init_db()`) to create tables.
 - Session management utilities for dependency injection.
+- **Dependency Factory**: Composition root (`get_electronic_board_service()`) that wires the complete dependency chain (Session Factory → Repository → Service).
 
 ### Interfaces Layer (REST API)
 
@@ -211,10 +232,17 @@ rems-electric-panels-api/
 │   │   │   │   └── electronic_board.py  # ElectronicBoard entity
 │   │   │   └── value_objects/
 │   │   │       └── board_state.py       # BoardState enum
-│   │   └── repositories/
-│   │       └── electronic_board_repository.py  # Repository interface
+│   │   ├── repositories/
+│   │   │   └── electronic_board_repository.py  # Repository interface
+│   │   └── services/
+│   │       └── electronic_board_service.py  # Service interface
+│   ├── application/
+│   │   └── internal/
+│   │       └── services/
+│   │           └── electronic_board_service_impl.py  # Service implementation
 │   ├── infrastructure/
 │   │   ├── db.py                        # Database configuration
+│   │   ├── dependencies.py              # Dependency factory (composition root)
 │   │   └── repositories/
 │   │       └── electronic_board_sqlmodel_repository.py  # Repository implementation
 │   └── interfaces/
