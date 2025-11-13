@@ -66,3 +66,12 @@ class ElectronicBoardSQLModelRepository(ElectronicBoardRepository):
                     await session.delete(board)
                     return True
             return False
+
+    async def exists(self, board_id: UUID) -> bool:
+        """
+        Check whether a board with `board_id` exists.
+        """
+        statement = select(ElectronicBoard.id).where(ElectronicBoard.id == board_id)
+        async with self._session_factory() as session:
+            results = await session.execute(statement)
+            return results.scalar_one_or_none() is not None

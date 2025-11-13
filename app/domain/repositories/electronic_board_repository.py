@@ -48,3 +48,10 @@ class ElectronicBoardRepository(ABC):
         Delete an ElectronicBoard entity by its unique identifier.
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    async def exists(self, board_id: UUID) -> bool:
+        """
+        Check whether an ElectronicBoard with the given id exists.
+        """
+        raise NotImplementedError()
