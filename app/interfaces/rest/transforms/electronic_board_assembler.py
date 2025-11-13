@@ -6,7 +6,8 @@ from app.interfaces.rest.resources.electronic_board_resource import (
     ElectronicBoardResource,
     ElectronicBoardCreateResource,
     ElectronicBoardUpdateResource,
-    ElectronicBoardListResource
+    ElectronicBoardListResource,
+    ElectronicBoardDeleteResource
 )
 
 
@@ -137,3 +138,20 @@ class ElectronicBoardAssembler:
         entity_data.update(update_data)
         
         return ElectronicBoard(**entity_data)
+
+    @staticmethod
+    def to_delete_response(board_id: UUID) -> ElectronicBoardDeleteResource:
+        """
+        Create a delete response resource.
+        
+        Args:
+            board_id: The UUID of the deleted board.
+            
+        Returns:
+            ElectronicBoardDeleteResource: Confirmation message for the deletion.
+        """
+        return ElectronicBoardDeleteResource(
+            message=f"Electronic board with ID {board_id} successfully deleted."
+        )
+    
+    

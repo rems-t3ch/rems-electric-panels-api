@@ -5,7 +5,8 @@ from app.interfaces.rest.resources.electronic_board_resource import (
     ElectronicBoardResource,
     ElectronicBoardCreateResource,
     ElectronicBoardUpdateResource,
-    ElectronicBoardListResource
+    ElectronicBoardListResource,
+    ElectronicBoardDeleteResource
 )
 
 from app.infrastructure.db import get_async_session_factory
@@ -167,20 +168,24 @@ async def update_board(
 
 @router.delete(
     "/{board_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=ElectronicBoardDeleteResource,
+    status_code=status.HTTP_200_OK,
     summary="Delete an electronic board",
     description="Delete an electronic board by its unique identifier."
 )
 async def delete_board(
     board_id: UUID,
     repository: ElectronicBoardRepository = Depends(get_repository)
-) -> None:
+) -> ElectronicBoardDeleteResource:
     """
     Delete a board.
     
     Args:
         board_id: The unique identifier of the board.
         repository: The injected repository instance.
+        
+    Returns:
+        Confirmation message for the deletion.
         
     Raises:
         HTTPException: 404 if board not found.
@@ -194,3 +199,6 @@ async def delete_board(
         )
     
     await repository.delete(board_id)
+    
+    return ElectronicBoardAssembler.to_delete_response(board_id)
+

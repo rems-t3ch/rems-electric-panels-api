@@ -118,3 +118,20 @@ class ElectronicBoardListResource(BaseModel):
             ]
         }
     }
+
+
+class ElectronicBoardDeleteResource(BaseModel):
+    """
+    Response resource for deletion confirmation of an electronic board.
+    """
+    message: str = Field(..., description="Confirmation message")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "message": "Electronic board successfully deleted."
+                }
+            ]
+        }
+    }
