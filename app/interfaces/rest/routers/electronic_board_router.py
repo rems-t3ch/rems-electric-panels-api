@@ -12,17 +12,23 @@ from app.interfaces.rest.resources.electronic_board_resource import (
 from app.infrastructure.db import get_async_session_factory
 from app.infrastructure.repositories.electronic_board_sqlmodel_repository import ElectronicBoardSQLModelRepository
 
-from app.domain.repositories.electronic_board_repository import ElectronicBoardRepository
 from app.interfaces.rest.transforms.electronic_board_assembler import ElectronicBoardAssembler
+
+from app.domain.services.electronic_board_service import ElectronicBoardService
+from app.application.internal.services.electronic_board_service_impl import ElectronicBoardServiceImpl
 
 router = APIRouter(prefix="/boards", tags=["Electronic Boards"])
 
-async def get_repository() -> ElectronicBoardRepository:
+async def get_service() -> ElectronicBoardService:
     """
-    Dependency to get the repository instance.
+    Dependency to get the service instance.
+    
+    This function creates the complete dependency chain:
+    Session Factory -> Repository -> Service
     """
     session_factory = get_async_session_factory()
-    return ElectronicBoardSQLModelRepository(session_factory)
+    repository = ElectronicBoardSQLModelRepository(session_factory)
+    return ElectronicBoardServiceImpl(repository)
 
 
 @router.post(
@@ -34,14 +40,14 @@ async def get_repository() -> ElectronicBoardRepository:
 )
 async def create_board(
     resource: ElectronicBoardCreateResource,
-    repository: ElectronicBoardRepository = Depends(get_repository)
+    service: ElectronicBoardService = Depends(get_service)
 ) -> ElectronicBoardResource:
     """
     Create a new electronic board.
     
     Args:
         resource: The board data from the request body.
-        repository: The injected repository instance.
+        service: The injected service instance.
         
     Returns:
         The created board resource with generated ID.
@@ -52,7 +58,7 @@ async def create_board(
     try:
         entity = ElectronicBoardAssembler.to_entity(resource)
         
-        created_entity = await repository.create(entity)
+        created_entity = await service.create_board(entity)
         
         return ElectronicBoardAssembler.to_resource(created_entity)
     except ValueError as e:
@@ -69,18 +75,18 @@ async def create_board(
     description="Retrieve a list of all electronic boards in the system."
 )
 async def list_boards(
-    repository: ElectronicBoardRepository = Depends(get_repository)
+    service: ElectronicBoardService = Depends(get_service)
 ) -> ElectronicBoardListResource:
     """
     List all electronic boards.
     
     Args:
-        repository: The injected repository instance.
+        service: The injected service instance.
         
     Returns:
         A list resource containing all boards and metadata.
     """
-    entities = await repository.list_all()
+    entities = await service.list_all_boards()
     return ElectronicBoardAssembler.to_resource_list(entities)
 
 
@@ -92,14 +98,14 @@ async def list_boards(
 )
 async def get_board(
     board_id: UUID,
-    repository: ElectronicBoardRepository = Depends(get_repository)
+    service: ElectronicBoardService = Depends(get_service)
 ) -> ElectronicBoardResource:
     """
     Get a board by ID.
     
     Args:
         board_id: The unique identifier of the board.
-        repository: The injected repository instance.
+        service: The injected service instance.
         
     Returns:
         The board resource.
@@ -107,7 +113,7 @@ async def get_board(
     Raises:
         HTTPException: 404 if board not found.
     """
-    entity = await repository.get_by_id(board_id)
+    entity = await service.get_board_by_id(board_id)
     
     if entity is None:
         raise HTTPException(
@@ -127,7 +133,7 @@ async def get_board(
 async def update_board(
     board_id: UUID,
     resource: ElectronicBoardUpdateResource,
-    repository: ElectronicBoardRepository = Depends(get_repository)
+    service: ElectronicBoardService = Depends(get_service)
 ) -> ElectronicBoardResource:
     """
     Update a board.
@@ -135,7 +141,7 @@ async def update_board(
     Args:
         board_id: The unique identifier of the board.
         resource: The update data from the request body.
-        repository: The injected repository instance.
+        service: The injected service instance.
         
     Returns:
         The updated board resource.
@@ -144,7 +150,7 @@ async def update_board(
         HTTPException: 404 if board not found, 400 if validation fails.
     """
    
-    existing_entity = await repository.get_by_id(board_id)
+    existing_entity = await service.get_board_by_id(board_id)
     
     if existing_entity is None:
         raise HTTPException(
@@ -156,7 +162,7 @@ async def update_board(
 
         updated_entity = ElectronicBoardAssembler.update_entity(existing_entity, resource)
         
-        updated_entity = await repository.update(updated_entity)
+        updated_entity = await service.update_board(updated_entity)
         
         return ElectronicBoardAssembler.to_resource(updated_entity)
     except ValueError as e:
@@ -175,14 +181,14 @@ async def update_board(
 )
 async def delete_board(
     board_id: UUID,
-    repository: ElectronicBoardRepository = Depends(get_repository)
+    service: ElectronicBoardService = Depends(get_service)
 ) -> ElectronicBoardDeleteResource:
     """
     Delete a board.
     
     Args:
         board_id: The unique identifier of the board.
-        repository: The injected repository instance.
+        service: The injected service instance.
         
     Returns:
         Confirmation message for the deletion.
@@ -190,15 +196,13 @@ async def delete_board(
     Raises:
         HTTPException: 404 if board not found.
     """
-    existing_entity = await repository.get_by_id(board_id)
+    success = await service.delete_board(board_id)
     
-    if existing_entity is None:
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Electronic board with ID {board_id} not found"
         )
-    
-    await repository.delete(board_id)
     
     return ElectronicBoardAssembler.to_delete_response(board_id)
 
