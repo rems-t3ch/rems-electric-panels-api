@@ -8,7 +8,7 @@ from pydantic import (
     field_validator as validator
 )
 
-from app.domain.value_objects.board_state import BoardState
+from app.domain.model.value_objects.board_state import BoardState
 
 class ElectronicBoard(SQLModel, table=True):
     """
