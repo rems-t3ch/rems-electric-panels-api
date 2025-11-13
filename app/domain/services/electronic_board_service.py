@@ -58,31 +58,32 @@ class ElectronicBoardService(ABC):
         raise NotImplementedError()
     
     @abstractmethod
-    async def update_board(self, board: ElectronicBoard) -> ElectronicBoard:
+    async def update_board(self, board_id: UUID, board: ElectronicBoard) -> ElectronicBoard:
         """
         Update an existing electronic board.
         
         Args:
+            board_id: The unique identifier of the board to update.
             board: The board entity with updated values.
             
         Returns:
             The updated board.
             
         Raises:
-            ValueError: If validation fails at the domain level.
+            ValueError: If board not found or validation fails.
         """
         raise NotImplementedError()
     
     @abstractmethod
-    async def delete_board(self, board_id: UUID) -> bool:
+    async def delete_board(self, board_id: UUID) -> None:
         """
         Delete an electronic board by its ID.
         
         Args:
             board_id: The unique identifier of the board to delete.
             
-        Returns:
-            True if the board was deleted, False if not found.
+        Raises:
+            ValueError: If board not found.
         """
         raise NotImplementedError()
     

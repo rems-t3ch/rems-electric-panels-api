@@ -9,27 +9,11 @@ from app.interfaces.rest.resources.electronic_board_resource import (
     ElectronicBoardDeleteResource
 )
 
-from app.infrastructure.db import get_async_session_factory
-from app.infrastructure.repositories.electronic_board_sqlmodel_repository import ElectronicBoardSQLModelRepository
-
 from app.interfaces.rest.transforms.electronic_board_assembler import ElectronicBoardAssembler
-
 from app.domain.services.electronic_board_service import ElectronicBoardService
-from app.application.internal.services.electronic_board_service_impl import ElectronicBoardServiceImpl
+from app.infrastructure.dependencies import get_electronic_board_service
 
 router = APIRouter(prefix="/boards", tags=["Electronic Boards"])
-
-async def get_service() -> ElectronicBoardService:
-    """
-    Dependency to get the service instance.
-    
-    This function creates the complete dependency chain:
-    Session Factory -> Repository -> Service
-    """
-    session_factory = get_async_session_factory()
-    repository = ElectronicBoardSQLModelRepository(session_factory)
-    return ElectronicBoardServiceImpl(repository)
-
 
 @router.post(
     "",
@@ -40,7 +24,7 @@ async def get_service() -> ElectronicBoardService:
 )
 async def create_board(
     resource: ElectronicBoardCreateResource,
-    service: ElectronicBoardService = Depends(get_service)
+    service: ElectronicBoardService = Depends(get_electronic_board_service)
 ) -> ElectronicBoardResource:
     """
     Create a new electronic board.
@@ -75,7 +59,7 @@ async def create_board(
     description="Retrieve a list of all electronic boards in the system."
 )
 async def list_boards(
-    service: ElectronicBoardService = Depends(get_service)
+    service: ElectronicBoardService = Depends(get_electronic_board_service)
 ) -> ElectronicBoardListResource:
     """
     List all electronic boards.
@@ -98,7 +82,7 @@ async def list_boards(
 )
 async def get_board(
     board_id: UUID,
-    service: ElectronicBoardService = Depends(get_service)
+    service: ElectronicBoardService = Depends(get_electronic_board_service)
 ) -> ElectronicBoardResource:
     """
     Get a board by ID.
@@ -133,7 +117,7 @@ async def get_board(
 async def update_board(
     board_id: UUID,
     resource: ElectronicBoardUpdateResource,
-    service: ElectronicBoardService = Depends(get_service)
+    service: ElectronicBoardService = Depends(get_electronic_board_service)
 ) -> ElectronicBoardResource:
     """
     Update a board.
@@ -149,20 +133,18 @@ async def update_board(
     Raises:
         HTTPException: 404 if board not found, 400 if validation fails.
     """
-   
-    existing_entity = await service.get_board_by_id(board_id)
-    
-    if existing_entity is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Electronic board with ID {board_id} not found"
-        )
-    
     try:
-
+        existing_entity = await service.get_board_by_id(board_id)
+        
+        if existing_entity is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Electronic board with ID {board_id} not found"
+            )
+        
         updated_entity = ElectronicBoardAssembler.update_entity(existing_entity, resource)
         
-        updated_entity = await service.update_board(updated_entity)
+        updated_entity = await service.update_board(board_id, updated_entity)
         
         return ElectronicBoardAssembler.to_resource(updated_entity)
     except ValueError as e:
@@ -181,7 +163,7 @@ async def update_board(
 )
 async def delete_board(
     board_id: UUID,
-    service: ElectronicBoardService = Depends(get_service)
+    service: ElectronicBoardService = Depends(get_electronic_board_service)
 ) -> ElectronicBoardDeleteResource:
     """
     Delete a board.
@@ -196,13 +178,12 @@ async def delete_board(
     Raises:
         HTTPException: 404 if board not found.
     """
-    success = await service.delete_board(board_id)
-    
-    if not success:
+    try:
+        await service.delete_board(board_id)
+        return ElectronicBoardAssembler.to_delete_response(board_id)
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Electronic board with ID {board_id} not found"
+            detail=str(e)
         )
-    
-    return ElectronicBoardAssembler.to_delete_response(board_id)
 

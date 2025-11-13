@@ -61,45 +61,43 @@ class ElectronicBoardServiceImpl(ElectronicBoardService):
         
         return await self._electronic_board_repository.list_all()
     
-    async def update_board(self, board: ElectronicBoard) -> ElectronicBoard:
+    async def update_board(self, board_id: UUID, board: ElectronicBoard) -> ElectronicBoard:
         """
         Update an existing electronic board.
         
         Args:
+            board_id: The unique identifier of the board to update.
             board: The board entity with updated values.
             
         Returns:
             The updated board.
             
         Raises:
-            ValueError: If validation fails at the domain level.
+            ValueError: If board not found or validation fails.
         """
-
-        exists = await self._electronic_board_repository.exists(board.id)
-
-        if not exists:
-            raise ValueError(f"ElectronicBoard with id {board.id} does not exist.")
+        existing_entity = await self._electronic_board_repository.get_by_id(board_id)
+        
+        if existing_entity is None:
+            raise ValueError(f"Electronic board with ID {board_id} not found")
+        
         
         updated_board = await self._electronic_board_repository.update(board)
         
         return updated_board
     
-    async def delete_board(self, board_id: UUID) -> bool:
+    async def delete_board(self, board_id: UUID) -> None:
         """
         Delete an electronic board by its ID.
         
         Args:
             board_id: The unique identifier of the board to delete.
             
-        Returns:
-            True if the board was deleted, False if not found.
+        Raises:
+            ValueError: If board not found.
         """
-        board = await self._electronic_board_repository.get_by_id(board_id)
+        exists = await self._electronic_board_repository.exists(board_id)
         
-        if board is None:
-            return False
+        if not exists:
+            raise ValueError(f"Electronic board with ID {board_id} not found")
         
-        success = await self._electronic_board_repository.delete(board_id)
-        
-        return success
-    
+        await self._electronic_board_repository.delete(board_id)
