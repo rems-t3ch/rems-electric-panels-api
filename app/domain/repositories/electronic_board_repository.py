@@ -45,7 +45,7 @@ class ElectronicBoardRepository(ABC):
         raise NotImplementedError()
     
     @abstractmethod
-    async def delete(self, board_id: UUID) -> None:
+    async def delete(self, board_id: UUID) -> bool:
         """
         Delete an ElectronicBoard entity by its unique identifier.
         """
