@@ -7,9 +7,8 @@ from sqlmodel import select
 from sqlalchemy.ext.asyncio.session import AsyncSession, async_sessionmaker
 from app.domain.repositories.electronic_board_repository import ElectronicBoardRepository
 
-if TYPE_CHECKING:
-    from app.domain.model.entities.electronic_board import ElectronicBoard
-
+from app.domain.model.entities.electronic_board import ElectronicBoard
+    
 class ElectronicBoardSQLModelRepository(ElectronicBoardRepository):
     """
     SQLModel-based implementation of the ElectronicBoardRepository.

@@ -1,9 +1,7 @@
 from uuid import UUID
 from typing import TYPE_CHECKING, List, Optional
 from abc import ABC, abstractmethod
-
-if TYPE_CHECKING:
-    from app.domain.model.entities.electronic_board import ElectronicBoard
+from app.domain.model.entities.electronic_board import ElectronicBoard
 
 class ElectronicBoardRepository(ABC):
     """
