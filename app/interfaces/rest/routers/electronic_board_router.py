@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends
 
 from app.interfaces.rest.resources.electronic_board_resource import (
@@ -50,13 +49,10 @@ async def create_board(
         HTTPException: 400 if validation fails at domain level.
     """
     try:
-        # Convert resource to domain entity (validators run here)
         entity = ElectronicBoardAssembler.to_entity(resource)
         
-        # Persist the entity
         created_entity = await repository.create(entity)
         
-        # Convert back to resource for response
         return ElectronicBoardAssembler.to_resource(created_entity)
     except ValueError as e:
         raise HTTPException(
@@ -146,7 +142,7 @@ async def update_board(
     Raises:
         HTTPException: 404 if board not found, 400 if validation fails.
     """
-    # Get existing entity
+   
     existing_entity = await repository.get_by_id(board_id)
     
     if existing_entity is None:
@@ -156,13 +152,11 @@ async def update_board(
         )
     
     try:
-        # Update the entity with new data (validators run here)
+
         updated_entity = ElectronicBoardAssembler.update_entity(existing_entity, resource)
         
-        # Persist changes
         updated_entity = await repository.update(updated_entity)
         
-        # Convert to resource
         return ElectronicBoardAssembler.to_resource(updated_entity)
     except ValueError as e:
         raise HTTPException(
@@ -191,7 +185,6 @@ async def delete_board(
     Raises:
         HTTPException: 404 if board not found.
     """
-    # Check if board exists
     existing_entity = await repository.get_by_id(board_id)
     
     if existing_entity is None:
@@ -200,5 +193,4 @@ async def delete_board(
             detail=f"Electronic board with ID {board_id} not found"
         )
     
-    # Delete the board
     await repository.delete(board_id)

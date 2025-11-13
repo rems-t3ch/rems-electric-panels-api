@@ -5,7 +5,8 @@ from sqlmodel import SQLModel, Field
 
 from pydantic import (
     ValidationInfo,
-    field_validator as validator
+    field_validator as validator,
+    model_validator
 )
 
 from app.domain.model.value_objects.board_state import BoardState
@@ -26,6 +27,11 @@ class ElectronicBoard(SQLModel, table=True):
     """
     
     __tablename__ = "electronic_boards"
+    
+    model_config = {
+        "validate_assignment": True,
+        "validate_default": True
+    }
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
     
@@ -38,18 +44,6 @@ class ElectronicBoard(SQLModel, table=True):
     year_manufactured: int = Field(..., ge=1900)
     year_installed: int = Field(..., ge=1900)
 
-    @validator("year_installed", mode="after")
-    def _installed_after_manufactured(cls, value: int, info: ValidationInfo):
-        """
-        Ensure that year_installed is not earlier than year_manufactured.
-        """
-        year_manu = info.data.get("year_manufactured")
-        
-        if year_manu is not None and value < year_manu:
-            raise ValueError("year_installed must be >= year_manufactured")
-        
-        return value
-
     @validator("year_manufactured", "year_installed", mode="after")
     def _year_not_in_future(cls, value: int, info: ValidationInfo):
         """
@@ -61,6 +55,20 @@ class ElectronicBoard(SQLModel, table=True):
             raise ValueError(f"Year cannot be in the future (>{current_year})")
         
         return value
+    
+    @model_validator(mode="after")
+    def _validate_installation_year(self) -> "ElectronicBoard":
+        """
+        Ensure that year_installed is not earlier than year_manufactured.
+        """
+        if (self.year_installed is not None and 
+            self.year_manufactured is not None and 
+            self.year_installed < self.year_manufactured):
+            raise ValueError(
+                f"year_installed ({self.year_installed}) must be >= "
+                f"year_manufactured ({self.year_manufactured})"
+            )
+        return self
     
     @validator("state", mode="before")
     def _validate_state(cls, value, info: ValidationInfo):

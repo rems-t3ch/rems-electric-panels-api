@@ -13,10 +13,6 @@ from app.interfaces.rest.resources.electronic_board_resource import (
 class ElectronicBoardAssembler:
     """
     Assembler class to convert between domain entities and REST resources.
-    
-    This class provides static methods to transform ElectronicBoard domain entities
-    to/from their REST API resource representations, following the separation of concerns
-    principle and avoiding direct exposure of domain models in the API layer.
     """
 
     @staticmethod
@@ -119,9 +115,6 @@ class ElectronicBoardAssembler:
         """
         Create a new entity by merging update resource data with an existing entity.
         
-        This method creates a fresh entity instance with updated values, useful for
-        scenarios where you want to validate the complete updated state before persistence.
-        
         Args:
             resource: The update resource with new values.
             existing_entity: The current entity state.
@@ -129,7 +122,6 @@ class ElectronicBoardAssembler:
         Returns:
             ElectronicBoard: A new entity instance with merged data.
         """
-        # Start with existing entity data
         entity_data = {
             "id": existing_entity.id,
             "name": existing_entity.name,
@@ -141,7 +133,6 @@ class ElectronicBoardAssembler:
             "year_installed": existing_entity.year_installed
         }
         
-        # Override with update resource data (only non-None values)
         update_data = resource.model_dump(exclude_unset=True, exclude_none=True)
         entity_data.update(update_data)
         
