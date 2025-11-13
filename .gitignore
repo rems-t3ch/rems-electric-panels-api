@@ -1,0 +1,26 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.venv/
+venv/
+env/
+
+# SQLite files (optional)
+*.db
+*.sqlite
+
+# VS Code
+.vscode/
+
+# Pytest
+.pytest_cache/
+
+# Migrations cache (if using Alembic later)
+alembic.ini
+alembic/
+
+# MacOS
+.DS_Store
