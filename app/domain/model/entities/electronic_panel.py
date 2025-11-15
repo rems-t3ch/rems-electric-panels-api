@@ -9,24 +9,24 @@ from pydantic import (
     model_validator
 )
 
-from app.domain.model.value_objects.board_state import BoardState
+from app.domain.model.value_objects.panel_state import PanelState
 
-class ElectronicBoard(SQLModel, table=True):
+class ElectronicPanel(SQLModel, table=True):
     """
-    Represents an electronic board in the system.
+    Represents an electronic panel in the system.
 
     Attributes:
-        id (uuid.UUID): Unique identifier for the electronic board.
-        name (str): Name of the electronic board.
-        location (str): Physical location of the electronic board.
-        brand (Optional[str]): Brand of the electronic board.
-        amperage_capacity (float): Amperage capacity of the electronic board.
-        state (BoardState): Current state of the electronic board.
-        year_manufactured (int): Year the electronic board was manufactured.
-        year_installed (int): Year the electronic board was installed.
+        id (uuid.UUID): Unique identifier for the electronic panel.
+        name (str): Name of the electronic panel.
+        location (str): Physical location of the electronic panel.
+        brand (Optional[str]): Brand of the electronic panel.
+        amperage_capacity (float): Amperage capacity of the electronic panel.
+        state (PanelState): Current state of the electronic panel.
+        year_manufactured (int): Year the electronic panel was manufactured.
+        year_installed (int): Year the electronic panel was installed.
     """
     
-    __tablename__ = "electronic_boards"
+    __tablename__ = "electronic_panels"
     
     model_config = {
         "validate_assignment": True,
@@ -40,7 +40,7 @@ class ElectronicBoard(SQLModel, table=True):
     brand: Optional[str] = Field(default=None, max_length=100)
     
     amperage_capacity: float = Field(..., gt=0)
-    state: BoardState = Field(default=BoardState.OPERATIVE)
+    state: PanelState = Field(default=PanelState.OPERATIVE)
     year_manufactured: int = Field(..., ge=1900)
     year_installed: int = Field(..., ge=1900)
 
@@ -57,7 +57,7 @@ class ElectronicBoard(SQLModel, table=True):
         return value
     
     @model_validator(mode="after")
-    def _validate_installation_year(self) -> "ElectronicBoard":
+    def _validate_installation_year(self) -> "ElectronicPanel":
         """
         Ensure that year_installed is not earlier than year_manufactured.
         """
@@ -73,16 +73,16 @@ class ElectronicBoard(SQLModel, table=True):
     @validator("state", mode="before")
     def _validate_state(cls, value, info: ValidationInfo):
         """
-        Validate and convert the state to BoardState enum.
+        Validate and convert the state to PanelState enum.
         """
-        if isinstance(value, BoardState):
+        if isinstance(value, PanelState):
             return value
         
         if isinstance(value, str):
             val = value.strip().lower()
             try:
-                return BoardState(val)
+                return PanelState(val)
             except ValueError:
-                valid_states = ", ".join([e.value for e in BoardState])
+                valid_states = ", ".join([e.value for e in PanelState])
                 raise ValueError(f"Invalid state '{value}'. Valid values: {valid_states}")
-        raise ValueError("state must be a BoardState or str")
+        raise ValueError("state must be a PanelState or str")

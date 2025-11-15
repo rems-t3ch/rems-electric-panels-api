@@ -4,9 +4,9 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from app.domain.model.entities.electronic_board import ElectronicBoard
+from app.domain.model.entities.electronic_panel import ElectronicPanel
 
-DATABASE_URL = "sqlite+aiosqlite:///./boards.db"
+DATABASE_URL = "sqlite+aiosqlite:///./panels.db"
 
 async_engine = create_async_engine(
     DATABASE_URL,
